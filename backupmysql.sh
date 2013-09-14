@@ -23,19 +23,37 @@ if  [ ! -d $BACKDIR ]; then
 	echo "done!"
 fi
 
-if  [ $DUMPALL = "y" ]; then
-	echo -n "Creating list of all your databases..."
-	DBS=`mysql -h $HOST --user=$USER --password=$PASS -Bse "show databases;"`
-	echo "done!"
-fi
+for KEY in "${!DBHOST[@]}"; do
+	echo "Backing up MySQL database on ${DBHOST[$KEY]}..."
 
-echo "Backing up MySQL databases..."
-for database in $DBS; do
-	echo -n "Backing up database $database..."
-	mysqldump -h $HOST --user=$USER --password=$PASS $database > \
-		$BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
-	gzip -f -9 $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
-	echo "done!"
+	if [ -z "${DBNAMES[$KEY]}" ]; then
+		echo -n "Creating list of all your databases..."
+		DBS=`mysql -h ${DBHOST[$KEY]} --user=${DBUSER[$KEY]} --password=${DBPASS[$KEY]} -Bse "show databases;"`
+		echo "done!"
+	else
+		DBS=${DBNAMES[$KEY]}
+	fi 
+	
+	# filter out the tables to backup
+	if [ -n "${DBTABLES[$KEY]}" ]; then
+		if  [ ${DBTABLESMATCH[$KEY]} = "exclude" ]; then
+			TABLES=''
+			for table in ${DBTABLES[$KEY]}; do
+				TABLES="$TABLES --ignore-table=$table "
+			done
+		else
+			TABLES=${DBTABLES[$KEY]}
+		fi
+	fi
+	
+	for database in $DBS; do
+		echo -n "Backing up database $database..."
+		test ${DBHOST[$KEY]} = "localhost" && SERVER=`hostname -f` || SERVER=${DBHOST[$KEY]}
+		mysqldump -h ${DBHOST[$KEY]} --user=${DBUSER[$KEY]} --password=${DBPASS[$KEY]} ${DBOPTIONS[$KEY]} $database $TABLES > \
+			$BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
+		gzip -f -9 $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
+		echo "done!"
+	done
 done
 
 # if you have the mail program 'mutt' installed on
