@@ -32,8 +32,8 @@ for KEY in "${!DBHOST[@]}"; do
 		echo "done!"
 	else
 		DBS=${DBNAMES[$KEY]}
-	fi 
-	
+	fi
+
 	# filter out the tables to backup
 	if [ -n "${DBTABLES[$KEY]}" ]; then
 		if  [ ${DBTABLESMATCH[$KEY]} = "exclude" ]; then
@@ -45,7 +45,7 @@ for KEY in "${!DBHOST[@]}"; do
 			TABLES=${DBTABLES[$KEY]}
 		fi
 	fi
-	
+
 	for database in $DBS; do
 		echo -n "Backing up database $database..."
 		test ${DBHOST[$KEY]} = "localhost" && SERVER=`hostname -f` || SERVER=${DBHOST[$KEY]}
@@ -66,8 +66,8 @@ if  [ $MAIL = "y" ]; then
 	ATTACH=`for file in $BACKDIR/*$DATE-mysqlbackup.sql.gz; do echo -n "-a ${file} ";  done`
 
 	echo -e "$BODY" | mutt -s "$SUBJECT" $ATTACH -- $EMAILS
-	if [[ $? -ne 0 ]]; then 
-		echo -e "ERROR:  Your backup could not be emailed to you! \n"; 
+	if [[ $? -ne 0 ]]; then
+		echo -e "ERROR:  Your backup could not be emailed to you! \n";
 	else
 		echo -e "Your backup has been emailed to you! \n"
 	fi
@@ -76,7 +76,7 @@ fi
 if  [ $DELETE = "y" ]; then
 	OLDDBS=`cd $BACKDIR; find . -name "*-mysqlbackup.sql.gz" -mtime +$DAYS`
 	REMOVE=`for file in $OLDDBS; do echo -n -e "delete ${file}\n"; done` # will be used in FTP
-		
+
 	cd $BACKDIR; for file in $OLDDBS; do rm -v ${file}; done
 	if  [ $DAYS = "1" ]; then
 		echo "Yesterday's backup has been deleted."
@@ -84,7 +84,11 @@ if  [ $DELETE = "y" ]; then
 		echo "The backups from $DAYS days ago and earlier have been deleted."
 	fi
 fi
-	
+
+if  [ $DUPLICITY = "y" ]; then
+  duplicity full --progress $DUPLICITY_OPTIONS $BACKDIR $DUPLICITY_TARGET_URL
+fi
+
 if  [ $FTP = "y" ]; then
 	echo "Initiating FTP connection..."
 
@@ -109,4 +113,3 @@ EOF
 fi
 
 echo "Your backup is complete!"
-
