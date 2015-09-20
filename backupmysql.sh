@@ -89,6 +89,10 @@ if  [ $DUPLICITY = "y" ]; then
   duplicity full --progress $DUPLICITY_OPTIONS $BACKDIR $DUPLICITY_TARGET_URL
 fi
 
+if  [ $S3_UPLOAD = "y" ]; then
+  aws s3 sync $BACKDIR s3://$S3_BUCKET $S3_OPTIONS
+fi
+
 if  [ $FTP = "y" ]; then
 	echo "Initiating FTP connection..."
 
