@@ -102,7 +102,7 @@ if  [ $FTP = "y" ]; then
   for KEY in "${!FTPHOST[@]}"; do
     echo -e "\nConnecting to ${FTPHOST[$KEY]} with user ${FTPUSER[$KEY]}..."
     ftp -nvp <<EOF
-    open ${FTPHOST[$KEY]}
+    open ${FTPHOST[$KEY]} ${FTPPORT[$KEY]}
     user ${FTPUSER[$KEY]} ${FTPPASS[$KEY]}
     tick
     mkdir ${FTPDIR[$KEY]}
