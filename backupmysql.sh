@@ -90,7 +90,7 @@ if  [ $DUPLICITY = "y" ]; then
 fi
 
 if  [ $S3_UPLOAD = "y" ]; then
-  aws $AWS_CLI_OPTIONS s3 sync $BACKDIR s3://$S3_BUCKET $S3_OPTIONS
+  aws $AWS_CLI_OPTIONS s3 sync $BACKDIR s3://$S3_PATH $S3_OPTIONS
 fi
 
 if  [ $FTP = "y" ]; then
