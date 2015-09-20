@@ -51,7 +51,7 @@ for KEY in "${!DBHOST[@]}"; do
     test ${DBHOST[$KEY]} = "localhost" && SERVER=`hostname -f` || SERVER=${DBHOST[$KEY]}
     mysqldump --host ${DBHOST[$KEY]} --port ${DBPORT[$KEY]} --user=${DBUSER[$KEY]} --password=${DBPASS[$KEY]} \
       ${DBOPTIONS[$KEY]} $database $TABLES > $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
-    gzip -f -9 $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
+    $COMPRESSION_COMMAND $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
     echo "done!"
   done
 done
@@ -62,8 +62,8 @@ done
 
 if  [ $MAIL = "y" ]; then
   BODY="Your backup is ready! Find more useful scripts and info at http://www.ameir.net. \n\n"
-  BODY=$BODY`cd $BACKDIR; for file in *$DATE-mysqlbackup.sql.gz; do md5sum ${file};  done`
-  ATTACH=`for file in $BACKDIR/*$DATE-mysqlbackup.sql.gz; do echo -n "-a ${file} ";  done`
+  BODY=$BODY`cd $BACKDIR; for file in *$DATE-mysqlbackup.sql.$COMPRESSION_EXTENSION; do md5sum ${file};  done`
+  ATTACH=`for file in $BACKDIR/*$DATE-mysqlbackup.sql.$COMPRESSION_EXTENSION; do echo -n "-a ${file} ";  done`
 
   echo -e "$BODY" | mutt -s "$SUBJECT" $ATTACH -- $EMAILS
   if [[ $? -ne 0 ]]; then
@@ -74,7 +74,7 @@ if  [ $MAIL = "y" ]; then
 fi
 
 if  [ $DELETE = "y" ]; then
-  OLDDBS=`cd $BACKDIR; find . -name "*-mysqlbackup.sql.gz" -mtime +$DAYS`
+  OLDDBS=`cd $BACKDIR; find . -name "*-mysqlbackup.sql.$COMPRESSION_EXTENSION" -mtime +$DAYS`
   REMOVE=`for file in $OLDDBS; do echo -n -e "delete ${file}\n"; done` # will be used in FTP
 
   cd $BACKDIR; for file in $OLDDBS; do rm -v ${file}; done
@@ -97,7 +97,7 @@ if  [ $FTP = "y" ]; then
   echo "Initiating FTP connection..."
 
   cd $BACKDIR
-  ATTACH=`for file in *$DATE-mysqlbackup.sql.gz; do echo -n -e "put ${file}\n"; done`
+  ATTACH=`for file in *$DATE-mysqlbackup.sql.$COMPRESSION_EXTENSION; do echo -n -e "put ${file}\n"; done`
 
   for KEY in "${!FTPHOST[@]}"; do
     echo -e "\nConnecting to ${FTPHOST[$KEY]} with user ${FTPUSER[$KEY]}..."
