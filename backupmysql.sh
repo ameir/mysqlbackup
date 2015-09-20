@@ -49,7 +49,7 @@ for KEY in "${!DBHOST[@]}"; do
 	for database in $DBS; do
 		echo -n "Backing up database $database..."
 		test ${DBHOST[$KEY]} = "localhost" && SERVER=`hostname -f` || SERVER=${DBHOST[$KEY]}
-		mysqldump -h ${DBHOST[$KEY]} --user=${DBUSER[$KEY]} --password=${DBPASS[$KEY]} ${DBOPTIONS[$KEY]} $database $TABLES > \
+		mysqldump -h ${DBHOST[$KEY]} --port ${DBPORT[$KEY]} --user=${DBUSER[$KEY]} --password=${DBPASS[$KEY]} ${DBOPTIONS[$KEY]} $database $TABLES > \
 			$BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
 		gzip -f -9 $BACKDIR/$SERVER-$database-$DATE-mysqlbackup.sql
 		echo "done!"
